@@ -10,7 +10,7 @@ class RegimeDetector:
         self.n_clusters = n_clusters
         self.model = KMeans(n_clusters=n_clusters, random_state=RANDOM_STATE, n_init=10)
         self.feature_cols = []
-        self.rank_map = {} # Maps random k-means IDs to sorted Volatility IDs
+        self.rank_map = {}
 
     def _extract_features(self, X: pd.DataFrame):
         cols = X.columns.tolist()
@@ -36,26 +36,21 @@ class RegimeDetector:
         features = self._extract_features(X)
         self.feature_cols = features.columns.tolist()
         
-        # Initial fit
+        # initial fit
         raw_labels = self.model.fit_predict(features)
-        
         # --- SORTING LOGIC ---
-        # Find which column represents volatility
         vol_idx = 0
         for i, col in enumerate(self.feature_cols):
             if "vol" in col.lower():
                 vol_idx = i
                 break
-        
-        # Get the centers of the clusters for the volatility column
+
         centers = self.model.cluster_centers_[:, vol_idx]
         
-        # Create a mapping: Sort centers ascending (Low Vol -> High Vol)
-        # np.argsort(centers) gives the indices of the centers from lowest to highest
+        # sorting centers (Low Vol -> High Vol)
         sorted_indices = np.argsort(centers)
         self.rank_map = {raw_id: rank for rank, raw_id in enumerate(sorted_indices)}
-        
-        # Return sorted labels
+
         return np.array([self.rank_map[label] for label in raw_labels])
 
     def predict(self, X: pd.DataFrame):
@@ -64,11 +59,10 @@ class RegimeDetector:
         
         features = X[self.feature_cols].fillna(0)
         raw_labels = self.model.predict(features)
-        
-        # Apply the learned rank mapping
         return np.array([self.rank_map[label] for label in raw_labels])
 
 def add_regime_feature(X: pd.DataFrame, regimes):
     X = X.copy()
     X["regime"] = regimes
     return X
+
