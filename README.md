@@ -138,7 +138,7 @@ $MDD = min_t (E_t / max\_{tau ≤ t} E_tau - 1)$
     │   ├── risk.py
     │   └── validation.py
     ├── README.md
-    ├── requirements.txt
+    └── requirements.txt
 
 ------------------------------------------------------------------------
 
