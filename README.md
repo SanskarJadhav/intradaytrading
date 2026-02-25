@@ -46,7 +46,7 @@ A Multi-Layer Perceptron (MLP) designed to map complex, non-linear
 feature interactions.
 
 Regularization techniques include: 
-- Dropout layers\
+- Dropout layers
 - L2 (Ridge) weight regularization
 
 ### Regularized Linear Models (Scikit-Learn)
@@ -108,20 +108,20 @@ $MDD = min_t (E_t / max\_{tau ≤ t} E_tau - 1)$
 # 💻 Technical Stack
 
 **Deep Learning** 
-- TensorFlow 2.x\
+- TensorFlow 2.x
 - Keras
 
 **Machine Learning / Math** 
-- Scikit-Learn\
-- NumPy\
+- Scikit-Learn
+- NumPy
 - SciPy
 
 **Data Pipeline** 
-- Pandas\
+- Pandas
 - yfinance
 
 **Visualization & UI** 
-- Plotly\
+- Plotly
 - Streamlit
 
 ------------------------------------------------------------------------
