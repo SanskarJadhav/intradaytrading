@@ -96,7 +96,7 @@ Directional accuracy of active signals.
 
 ### Annualized Sharpe Ratio
 
-$Sharpe = sqrt(252 \* 78) \* mu_net / sigma_net$
+$Sharpe = sqrt(252 \* 72) \* mu_net / sigma_net$
 
 ### Maximum Drawdown (MDD)
 
