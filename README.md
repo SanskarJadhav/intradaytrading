@@ -148,3 +148,4 @@ $MDD = min_t (E_t / max\_{tau ≤ t} E_tau - 1)$
 pip install -r requirements.txt
 streamlit run app/app.py
 ```
+Or can visit online: [Alpha Backtest](https://alphabacktest.streamlit.app/).
