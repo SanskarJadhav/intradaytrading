@@ -131,12 +131,17 @@ $MDD = min_t (E_t / max\_{tau ≤ t} E_tau - 1)$
     ├── app/
     │   └── app.py
     ├── src/
+    |   ├── config.py
     │   ├── data.py
+    │   ├── ensemble.py
     │   ├── features.py
     │   ├── models.py
-    │   └── ensemble.py
-    ├── notebooks/
-    └── requirements.txt
+    │   ├── regime.py
+    │   ├── risk.py
+    │   └── validation.py
+    ├── README.md
+    ├── requirements.txt
+    └── setup.py
 
 ------------------------------------------------------------------------
 
