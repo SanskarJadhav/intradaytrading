@@ -151,7 +151,7 @@ try:
     # --- REGIME HEATMAP ---
     # Legend mapping for sorted IDs
     regime_map = {0: "Quiet/Stable", 1: "Trending", 2: "Volatile/Chaos"}
-    regime_colors = ['#444444', '#3399ff', '#129000'] # Grey, Blue, Amber
+    regime_colors = ['#444444', '#0099ff', '#ffcc00'] # Grey, Blue, Amber
     
     regime_names = [regime_map.get(int(r), "Unknown") for r in regimes_trimmed]
 
@@ -187,4 +187,5 @@ try:
 
 except Exception as e:
     st.error(f"Backtest Runtime Error: {e}")
+
 
