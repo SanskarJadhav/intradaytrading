@@ -11,6 +11,7 @@ from src.data import fetch_intraday_data, split_train_test
 from src.features import build_feature_matrix
 from src.models import scale_features, WINDOW_SIZE
 from src.ensemble import StackedEnsemble
+from src.regime import RegimeDetector # Ensure this import is here
 
 st.set_page_config(layout="wide", page_title="Alpha Backtester", page_icon="📈")
 st.title("📈 Intraday Alpha Backtesting Framework")
@@ -62,20 +63,27 @@ def run_model_pipeline(ticker, session_key):
     X_test, y_test = X[test_idx], y[test_idx]
     
     X_tr_s, X_te_s, _ = scale_features(X_train.values, X_test.values)
+    
+    # Regime Detection
+    rd = RegimeDetector()
+    rd.fit_predict(X_train) 
+    test_regimes = rd.predict(X_test)
+    
     model = StackedEnsemble()
     model.fit(X_tr_s, y_train.values)
     
     pred_rets = model.predict(X_te_s)
-    return raw_df, X_test, y_test, pred_rets
+    return raw_df, X_test, y_test, pred_rets, test_regimes
 
 try:
     current_session = get_session_key()
     with st.spinner(f"Running Alpha Pipeline for {ticker}..."):
-        raw_df, X_test, y_test, pred_rets = run_model_pipeline(ticker, current_session)
+        raw_df, X_test, y_test, pred_rets, test_regimes = run_model_pipeline(ticker, current_session)
 
     # --- ALPHA SIGNAL LOGIC ---
     actual_rets = y_test.values[WINDOW_SIZE:]
     times = X_test.index[WINDOW_SIZE:]
+    regimes_trimmed = test_regimes[WINDOW_SIZE:]
     
     bias = np.mean(pred_rets) if intercept_neutral else 0
     alpha_forecast = pred_rets - bias
@@ -119,8 +127,9 @@ try:
     
     sim_date = times[0].strftime('%B %d, %Y')
 
-    fig = make_subplots(rows=2, cols=1, shared_xaxes=True, 
-                        vertical_spacing=0.05, row_heights=[0.8, 0.2])
+    # UPDATED: 3 Rows to include Regime Heatmap
+    fig = make_subplots(rows=3, cols=1, shared_xaxes=True, 
+                        vertical_spacing=0.03, row_heights=[0.7, 0.15, 0.15])
 
     fig.add_trace(go.Scatter(x=times, y=actual_prices, name="Spot Price", 
                              line=dict(color='#00ff88', width=2)), row=1, col=1)
@@ -128,7 +137,7 @@ try:
     fig.add_trace(go.Scatter(x=forecast_times, y=pred_prices_raw, name="Alpha Forecast (T+1)", 
                              line=dict(color='#ff00ff', dash='dot', width=1.5)), row=1, col=1)
 
-    # Conviction Heatmap with Restoration of Labels
+    # Conviction Heatmap
     bar_colors = [f'rgba({"0, 255, 136" if s > 0 else "255, 75, 75"}, {c})' if s != 0 else 'rgba(100, 100, 100, 0.1)' 
                   for s, c in zip(active_signals, confidence_scores)]
     
@@ -140,10 +149,20 @@ try:
                          hovertemplate="<b>State:</b> %{text}<br><b>Conviction:</b> %{customdata:.1%}<extra></extra>",
                          customdata=confidence_scores), row=2, col=1)
 
+    # Regime Heatmap
+    regime_colors = ['#444444', '#3399ff', '#ffcc00'] # Neutral, Trending, Volatile
+    fig.add_trace(go.Bar(x=times, y=[1]*len(regimes_trimmed), 
+                         marker_color=[regime_colors[int(r) % len(regime_colors)] for r in regimes_trimmed],
+                         name="Market Regime", showlegend=False,
+                         hovertemplate="<b>Regime ID:</b> %{text}<extra></extra>",
+                         text=regimes_trimmed), row=3, col=1)
+
     fig.update_layout(title=f"Alpha Analytics: {ticker} | Simulation Date: {sim_date}", 
-                      template="plotly_dark", height=600, hovermode="x unified", margin=dict(t=50, b=50))
+                      template="plotly_dark", height=700, hovermode="x unified", margin=dict(t=50, b=50))
+    
     fig.update_yaxes(title_text="Price (USD)", row=1, col=1)
-    fig.update_yaxes(title_text="Signal (L/S)", showticklabels=False, row=2, col=1)
+    fig.update_yaxes(title_text="Signal", showticklabels=False, row=2, col=1)
+    fig.update_yaxes(title_text="Regime", showticklabels=False, row=3, col=1)
     
     st.plotly_chart(fig, width="stretch")
 
@@ -158,4 +177,3 @@ try:
 
 except Exception as e:
     st.error(f"Backtest Runtime Error: {e}")
-
