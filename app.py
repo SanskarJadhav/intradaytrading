@@ -10,8 +10,7 @@ from src.features import build_feature_matrix
 from src.models import scale_features, WINDOW_SIZE
 from src.ensemble import StackedEnsemble
 
-# Favicon updated to trending chart for professional feel
-st.set_page_config(layout="wide", page_title="Alpha Backtester")
+st.set_page_config(layout="wide", page_title="Alpha Backtester", page_icon="📈")
 st.title("📈 Intraday Alpha Backtesting Framework")
 
 # --- SIDEBAR ---
@@ -20,7 +19,6 @@ ticker = st.sidebar.selectbox(
     "Equity Universe", 
     ["BTC-USD", "AAPL", "NVDA", "TSLA", "MSFT", "AMD", "META", "GOOGL", "AMZN", "NFLX", "SPY", "QQQ"]
 )
-
 st.sidebar.markdown("---")
 st.sidebar.subheader("Backtest Parameters")
 
@@ -86,16 +84,12 @@ try:
     trades_taken = np.count_nonzero(active_signals)
     hit_ratio = np.mean(np.sign(actual_rets[active_signals != 0]) == np.sign(pred_rets[active_signals != 0])) if trades_taken > 0 else 0
     
-    # Cumulative PnL
     cum_returns = np.exp(np.cumsum(net_rets)) - 1
     total_net_return = cum_returns[-1] * 100
 
-    # Risk Adjusted Metrics (Sharpe)
-    # Annualizing assuming 252 days and 78 five-minute bars per day
     daily_std = np.std(net_rets) * np.sqrt(78)
     sharpe = (np.mean(net_rets) * 78 * 252) / (daily_std * np.sqrt(252)) if daily_std != 0 else 0
     
-    # Max Drawdown
     peak = np.maximum.accumulate(cum_returns + 1)
     drawdown = (cum_returns + 1) / peak - 1
     max_dd = np.min(drawdown) * 100
@@ -105,8 +99,8 @@ try:
     m1.metric("Information Hit Ratio", f"{hit_ratio:.2%}")
     prof_color = "normal" if total_net_return >= 0 else "inverse"
     m2.metric("Cumulative Alpha (Net)", f"{total_net_return:.2f}%", delta=f"{total_net_return:.2f}%", delta_color=prof_color)
-    m3.metric("Sharpe Ratio", f"{sharpe:.2f}", help="Risk-adjusted return. Above 2.0 is considered institutional grade.")
-    m4.metric("Max Drawdown", f"{max_dd:.2f}%", help="The largest peak-to-valley loss recorded in this session.")
+    m3.metric("Sharpe Ratio", f"{sharpe:.2f}", help="Institutional grade > 2.0")
+    m4.metric("Max Drawdown", f"{max_dd:.2f}%")
 
     # --- VISUALIZATION ---
     actual_prices = raw_df.loc[times, 'Close'].values
@@ -127,12 +121,20 @@ try:
     bar_colors = [f'rgba({"0, 255, 136" if s > 0 else "255, 75, 75"}, {c})' if s != 0 else 'rgba(100, 100, 100, 0.1)' 
                   for s, c in zip(active_signals, confidence_scores)]
     
+    signal_labels = ["LONG" if s > 0 else "SHORT" if s < 0 else "NO TRADE" for s in active_signals]
+    
     fig.add_trace(go.Bar(x=times, y=[1]*len(active_signals), marker_color=bar_colors,
-                         name="Signal Conviction", showlegend=False,
+                         name="Signal State", showlegend=False,
+                         text=signal_labels,
+                         hovertemplate="State: %{text}<br>Conviction: %{customdata:.1%}<extra></extra>",
                          customdata=confidence_scores), row=2, col=1)
 
     fig.update_layout(title=f"Alpha Analytics: {ticker} | Simulation Date: {backtest_date}", 
                       template="plotly_dark", height=600, hovermode="x unified", margin=dict(t=50, b=50))
+
+    fig.update_yaxes(title_text="Price (USD)", row=1, col=1)
+    fig.update_yaxes(title_text="Signal (Long/Short)", showticklabels=False, row=2, col=1)
+    
     st.plotly_chart(fig, use_container_width=True)
 
     # EQUITY CURVE
