@@ -105,8 +105,12 @@ try:
     cum_returns = np.exp(np.cumsum(net_rets)) - 1
     total_net_return = cum_returns[-1] * 100
 
-    daily_std = np.std(net_rets) * np.sqrt(78)
-    sharpe = (np.mean(net_rets) * 78 * 252) / (daily_std * np.sqrt(252)) if daily_std != 0 else 0
+    # daily_std = np.std(net_rets) * np.sqrt(78)
+    # sharpe = (np.mean(net_rets) * 78 * 252) / (daily_std * np.sqrt(252)) if daily_std != 0 else 0
+
+    bars_per_day = 72 # 10 to 4 noticed so 6 hours
+    annual_factor = np.sqrt(bars_per_day * 252)
+    sharpe = (np.mean(net_rets) / np.std(net_rets)) * annual_factor
     
     peak = np.maximum.accumulate(cum_returns + 1)
     drawdown = (cum_returns + 1) / peak - 1
@@ -187,6 +191,7 @@ try:
 
 except Exception as e:
     st.error(f"Backtest Runtime Error: {e}")
+
 
 
 
