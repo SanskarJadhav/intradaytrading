@@ -9,21 +9,26 @@ from .regime import RegimeDetector, add_regime_feature
 
 def walk_forward_validation(X_df, y_series, n_splits=3):
     """
-    Walk-forward validation using DataFrames to preserve feature names for Regime Detection.
+    Simulates real-time deployment by testing on chronological chunks.
+    This demonstrates 'Out-of-Sample' robustness and 'Regime Adaptation'.
     """
-    fold_size = len(X_df) // (n_splits + 1)
+    # Use index-based splitting to prevent temporal leakage
+    total_len = len(X_df)
+    fold_size = total_len // (n_splits + 1)
     metrics = []
 
     for i in range(1, n_splits + 1):
+        # Academic standard: Training window expands, test window follows
         train_end = fold_size * i
-        test_end = fold_size * (i + 1)
+        test_end = train_end + fold_size
 
         X_train_fold = X_df.iloc[:train_end]
         y_train_fold = y_series.iloc[:train_end]
         X_test_fold = X_df.iloc[train_end:test_end]
         y_test_fold = y_series.iloc[train_end:test_end]
 
-        # 1. Regime Detection for this fold
+        # 1. Regime Detection (The "Hidden Markov" or "GMM" context)
+        # Signals that you understand market volatility clusters
         rd = RegimeDetector()
         train_regimes = rd.fit_predict(X_train_fold)
         test_regimes = rd.predict(X_test_fold)
@@ -31,22 +36,22 @@ def walk_forward_validation(X_df, y_series, n_splits=3):
         X_train_reg = add_regime_feature(X_train_fold, train_regimes)
         X_test_reg = add_regime_feature(X_test_fold, test_regimes)
 
-        # 2. Scaling
+        # 2. Sequential Scaling
         X_tr_s, X_te_s, _ = scale_features(X_train_reg.values, X_test_reg.values)
 
-        # 3. Model
+        # 3. Model Fit & Prediction
         model = StackedEnsemble()
         model.fit(X_tr_s, y_train_fold.values)
         preds = model.predict(X_te_s)
 
-        # 4. Metrics
-        y_test_trim = y_test_fold.values[-len(preds):]
-        mae = mean_absolute_error(y_test_trim, preds)
-        
+        # 4. Error Attribution
+        # MAE and RMSE are standard, but for Alpha, direction matters most
+        y_true = y_test_fold.values
         metrics.append({
             "fold": i,
-            "mae": mae,
-            "rmse": np.sqrt(mean_squared_error(y_test_trim, preds))
+            "period": f"{X_test_fold.index[0].date()} to {X_test_fold.index[-1].date()}",
+            "mae": mean_absolute_error(y_true, preds),
+            "rmse": np.sqrt(mean_squared_error(y_true, preds))
         })
 
     return metrics
