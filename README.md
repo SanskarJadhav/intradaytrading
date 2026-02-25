@@ -1,49 +1,143 @@
-# Intraday Alpha Backtesting Framework
-A high-frequency signal research and backtesting engine designed to evaluate idiosyncratic alpha in liquid equity universes. This framework leverages an Ensemble Machine Learning approach to forecast T+1 returns while accounting for institutional-grade execution constraints.
+# Intraday Alpha Forecasting and Execution Framework
 
-## Quant Research Highlights
-Ensemble Alpha Signal: Utilizes a stacked ensemble architecture to capture non-linear price patterns across 5-minute intervals.
+## A Stacked Deep Learning Approach
 
-Intercept Neutralization: Implements a session-level de-meaning process to neutralize the global drift (systematic bias). This allows the framework to extract tradable signals even during one-way trending markets.
+------------------------------------------------------------------------
 
-Confidence-Weighted Execution: Signals are not binary; they are scaled by the model's conviction (Z-score of the forecast distribution). Only signals exceeding the Noise Floor (Conviction Threshold) trigger a capital allocation.
+## 📌 Abstract
 
-Friction-Adjusted Backtesting: Real-world simulation including a Transaction Friction parameter to account for the bid-ask spread, slippage, and commissions.
+Financial time-series data at the intraday level (e.g., 5-minute
+intervals) is notoriously non-stationary and exhibits a remarkably low
+Signal-to-Noise Ratio (SNR).
 
-## Methodology & Metrics
-The framework evaluates the "quality of intelligence" using institutional performance attribution:
+This project implements a quantitative research and backtesting
+framework designed to extract idiosyncratic alpha from liquid equity
+markets. By leveraging a **Stacked Ensemble Architecture**---combining
+the non-linear pattern recognition capabilities of TensorFlow/Keras Deep
+Neural Networks with the structural stability of regularized linear
+models---this framework generates, filters, and backtests T+1
+directional forecasts under realistic execution constraints.
 
-Information Hit Ratio: The pure predictive accuracy of the alpha signal before transaction costs are applied.
+------------------------------------------------------------------------
 
-Sharpe Ratio (Annualized): Measures the risk-adjusted return, normalizing for the volatility of the intraday strategy.
+# 🧠 1. Machine Learning Architecture
 
-Maximum Drawdown: Tracks the largest peak-to-trough decline, representing the strategy's historical risk profile.
+The predictive engine relies on a hierarchical stacking methodology
+(Stacked Generalization) to mitigate the variance inherent in financial
+forecasting.
 
-Capacity/Participation: Monitors the strategy's utilization rate, ensuring the alpha is not confined to a statistically insignificant number of bars.
+## 1.1 Data Preprocessing & Stationarity
 
-## Tech Stack
-Language: Python 3.x
+Raw price sequences are non-stationary. To satisfy weak stationarity
+assumptions, prices are transformed into logarithmic returns:
 
-Modeling: Scikit-Learn (Ensemble methods), NumPy (Vectorized Backtesting)
+r_t = ln(P_t / P\_{t-1})
 
-Visualization: Plotly (Dynamic Alpha Analytics)
+Features are subsequently standardized using strict temporal
+separation.\
+Z-score normalization is fitted exclusively on the expanding training
+window to prevent look-ahead bias (data leakage).
 
-Interface: Streamlit
+## 1.2 Base Learners (L0)
 
-## Project Structure
-├── app/
-│   └── app.py           # Dashboard & Signal Visualization
-├── src/
-│   ├── data.py          # Ingestion logic & API integration
-│   ├── features.py      # Feature engineering (Stationarity & Scaling)
-│   ├── models.py        # Model architecture & Training pipeline
-│   └── ensemble.py      # Stacked Regressor implementation
-└── requirements.txt
+### Deep Neural Network (TensorFlow 2.x / Keras)
 
-## Technical Concepts Explored
+A Multi-Layer Perceptron (MLP) designed to map complex, non-linear
+feature interactions.
 
-Intercept Neutralization (The "Intraday Focus")
-In many intraday scenarios, a model may suffer from Label Bias if the training data has a strong trend. This framework implements Intercept Neutralization to center the prediction vector around zero. This ensures the strategy focuses on mean-reversion or local momentum rather than simply betting on the day's trend, which is a common pitfall in retail trading bots.
+Regularization techniques include: - Dropout layers\
+- L2 (Ridge) weight regularization
 
-Conviction-Weighted Allocation
-Instead of fixed-size positions, this framework simulates a dynamic sizing approach. The signal opacity in the visualization represents the Signal Strength. High-conviction signals are prioritized, while low-conviction signals are filtered out as market noise, significantly improving the strategy's Profit Factor.
+### Regularized Linear Models (Scikit-Learn)
+
+Algorithms such as Ridge Regression act as high-bias, low-variance
+anchors, effectively handling multicollinearity in engineered momentum
+and volatility features.
+
+## 1.3 Meta-Learner (L1)
+
+The secondary layer ingests cross-validated predictions from base
+learners and computes an optimal weighted synthesis, reducing
+generalization error and producing the final raw alpha forecast.
+
+------------------------------------------------------------------------
+
+# 📈 2. Financial Engineering & Signal Processing
+
+## 2.1 Intercept Neutralization (Session-Relative Bias)
+
+A_t = y_hat_t - mean(y_hat)
+
+This isolates idiosyncratic alpha by removing session-level drift.
+
+## 2.2 Conviction-Weighted Thresholding
+
+Z_t = \|A_t\| / sigma_A
+
+If Z_t \< tau → signal suppressed (S_t = 0).\
+Otherwise → trade executed.
+
+------------------------------------------------------------------------
+
+# ⚖️ 3. Friction-Adjusted Backtesting
+
+Let: - S_t ∈ {-1, 0, 1} = execution signal\
+- c = transaction cost per trade
+
+R_net,t = (S_t \* r_actual,t) - (c \* \|S_t\|)
+
+------------------------------------------------------------------------
+
+## 3.1 Performance Metrics
+
+### Information Hit Ratio
+
+Directional accuracy of active signals.
+
+### Annualized Sharpe Ratio
+
+Sharpe = sqrt(252 \* 78) \* mu_net / sigma_net
+
+### Maximum Drawdown (MDD)
+
+MDD = min_t (E_t / max\_{tau ≤ t} E_tau - 1)
+
+------------------------------------------------------------------------
+
+# 💻 Technical Stack
+
+**Deep Learning** - TensorFlow 2.x\
+- Keras
+
+**Machine Learning / Math** - Scikit-Learn\
+- NumPy\
+- SciPy
+
+**Data Pipeline** - Pandas\
+- yfinance
+
+**Visualization & UI** - Plotly\
+- Streamlit
+
+------------------------------------------------------------------------
+
+# 📂 Repository Structure
+
+    ├── app/
+    │   └── app.py
+    ├── src/
+    │   ├── data.py
+    │   ├── features.py
+    │   ├── models.py
+    │   └── ensemble.py
+    ├── notebooks/
+    └── requirements.txt
+
+------------------------------------------------------------------------
+
+# 🚀 Usage
+
+``` bash
+pip install -r requirements.txt
+streamlit run app/app.py
+```
