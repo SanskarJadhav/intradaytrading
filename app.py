@@ -46,7 +46,7 @@ intercept_neutral = st.sidebar.checkbox(
 
 min_conviction = st.sidebar.slider(
     "Signal Conviction Threshold (%)", 
-    20, 95, 80, 5,
+    20, 95, 60, 5,
     help="Filters for high-conviction alpha signals by ignoring predictions within the noise floor."
 ) / 100
 
@@ -187,5 +187,6 @@ try:
 
 except Exception as e:
     st.error(f"Backtest Runtime Error: {e}")
+
 
 
