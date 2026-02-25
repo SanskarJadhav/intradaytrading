@@ -5,6 +5,8 @@ import plotly.graph_objs as go
 from plotly.subplots import make_subplots
 import numpy as np
 import pandas as pd
+import pytz
+from datetime import datetime
 from src.data import fetch_intraday_data, split_train_test
 from src.features import build_feature_matrix
 from src.models import scale_features, WINDOW_SIZE
@@ -13,12 +15,19 @@ from src.ensemble import StackedEnsemble
 st.set_page_config(layout="wide", page_title="Alpha Backtester", page_icon="📈")
 st.title("📈 Intraday Alpha Backtesting Framework")
 
+# --- CACHE KEY LOGIC ---
+def get_session_key():
+    """Generates a unique key based on the current New York date to force cache refresh daily."""
+    ny_tz = pytz.timezone('America/New_York')
+    return datetime.now(ny_tz).strftime("%Y-%m-%d")
+
 # --- SIDEBAR ---
 st.sidebar.title("Developed by Sanskar Jadhav")
 ticker = st.sidebar.selectbox(
     "Equity Universe", 
     ["BTC-USD", "AAPL", "NVDA", "TSLA", "MSFT", "AMD", "META", "GOOGL", "AMZN", "NFLX", "SPY", "QQQ"]
 )
+
 st.sidebar.markdown("---")
 st.sidebar.subheader("Backtest Parameters")
 
@@ -40,9 +49,9 @@ min_conviction = st.sidebar.slider(
     help="Filters for high-conviction alpha signals by ignoring predictions within the noise floor."
 ) / 100
 
-# --- STABLE TRAINING ENGINE ---
+# --- TRAINING ENGINE ---
 @st.cache_resource(show_spinner=False)
-def run_model_pipeline(ticker):
+def run_model_pipeline(ticker, session_key):
     raw_df = fetch_intraday_data(ticker)
     X, y = build_feature_matrix(raw_df)
     
@@ -60,8 +69,9 @@ def run_model_pipeline(ticker):
     return raw_df, X_test, y_test, pred_rets
 
 try:
+    current_session = get_session_key()
     with st.spinner(f"Running Alpha Pipeline for {ticker}..."):
-        raw_df, X_test, y_test, pred_rets = run_model_pipeline(ticker)
+        raw_df, X_test, y_test, pred_rets = run_model_pipeline(ticker, current_session)
 
     # --- ALPHA SIGNAL LOGIC ---
     actual_rets = y_test.values[WINDOW_SIZE:]
@@ -106,7 +116,8 @@ try:
     actual_prices = raw_df.loc[times, 'Close'].values
     pred_prices_raw = actual_prices * (1 + pred_rets)
     forecast_times = times + pd.Timedelta(minutes=5)
-    backtest_date = times[0].strftime('%Y-%m-%d')
+    
+    sim_date = times[0].strftime('%B %d, %Y')
 
     fig = make_subplots(rows=2, cols=1, shared_xaxes=True, 
                         vertical_spacing=0.05, row_heights=[0.8, 0.2])
@@ -117,25 +128,24 @@ try:
     fig.add_trace(go.Scatter(x=forecast_times, y=pred_prices_raw, name="Alpha Forecast (T+1)", 
                              line=dict(color='#ff00ff', dash='dot', width=1.5)), row=1, col=1)
 
-    # Conviction Heatmap
+    # Conviction Heatmap with Restoration of Labels
     bar_colors = [f'rgba({"0, 255, 136" if s > 0 else "255, 75, 75"}, {c})' if s != 0 else 'rgba(100, 100, 100, 0.1)' 
                   for s, c in zip(active_signals, confidence_scores)]
     
-    signal_labels = ["LONG" if s > 0 else "SHORT" if s < 0 else "NO TRADE" for s in active_signals]
+    signal_labels = ["LONG" if s > 0 else "SHORT" if s < 0 else "NEUTRAL" for s in active_signals]
     
     fig.add_trace(go.Bar(x=times, y=[1]*len(active_signals), marker_color=bar_colors,
                          name="Signal State", showlegend=False,
                          text=signal_labels,
-                         hovertemplate="State: %{text}<br>Conviction: %{customdata:.1%}<extra></extra>",
+                         hovertemplate="<b>State:</b> %{text}<br><b>Conviction:</b> %{customdata:.1%}<extra></extra>",
                          customdata=confidence_scores), row=2, col=1)
 
-    fig.update_layout(title=f"Alpha Analytics: {ticker} | Simulation Date: {backtest_date}", 
+    fig.update_layout(title=f"Alpha Analytics: {ticker} | Simulation Date: {sim_date}", 
                       template="plotly_dark", height=600, hovermode="x unified", margin=dict(t=50, b=50))
-
     fig.update_yaxes(title_text="Price (USD)", row=1, col=1)
-    fig.update_yaxes(title_text="Signal (Long/Short)", showticklabels=False, row=2, col=1)
+    fig.update_yaxes(title_text="Signal (L/S)", showticklabels=False, row=2, col=1)
     
-    st.plotly_chart(fig, width="stretch")
+    st.plotly_chart(fig, use_container_width=True)
 
     # EQUITY CURVE
     fig_equity = go.Figure()
@@ -144,8 +154,7 @@ try:
     fig_equity.update_layout(title="Net Performance Curve (%)", 
                              xaxis_title="Simulation Time (EST)", yaxis_title="Cumulative PnL (%)",
                              template="plotly_dark", height=400)
-    st.plotly_chart(fig_equity, width="stretch")
+    st.plotly_chart(fig_equity, use_container_width=True)
 
 except Exception as e:
     st.error(f"Backtest Runtime Error: {e}")
-
