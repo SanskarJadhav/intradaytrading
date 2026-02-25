@@ -127,8 +127,7 @@ $MDD = min_t (E_t / max\_{tau ≤ t} E_tau - 1)$
 
 # 📂 Repository Structure
 
-    ├── app/
-    │   └── app.py
+    ├── app.py
     ├── src/
     |   ├── config.py
     │   ├── data.py
@@ -140,7 +139,6 @@ $MDD = min_t (E_t / max\_{tau ≤ t} E_tau - 1)$
     │   └── validation.py
     ├── README.md
     ├── requirements.txt
-    └── setup.py
 
 ------------------------------------------------------------------------
 
