@@ -9,16 +9,15 @@ from .regime import RegimeDetector, add_regime_feature
 
 def walk_forward_validation(X_df, y_series, n_splits=3):
     """
-    Simulates real-time deployment by testing on chronological chunks.
-    This demonstrates 'Out-of-Sample' robustness and 'Regime Adaptation'.
+    Simulating real-time deployment by testing on chronological chunks.
+    'Out-of-Sample' robustness and 'Regime Adaptation'.
     """
-    # Use index-based splitting to prevent temporal leakage
     total_len = len(X_df)
     fold_size = total_len // (n_splits + 1)
     metrics = []
 
     for i in range(1, n_splits + 1):
-        # Academic standard: Training window expands, test window follows
+        # academic standard is training window expands, test window follows
         train_end = fold_size * i
         test_end = train_end + fold_size
 
@@ -27,8 +26,7 @@ def walk_forward_validation(X_df, y_series, n_splits=3):
         X_test_fold = X_df.iloc[train_end:test_end]
         y_test_fold = y_series.iloc[train_end:test_end]
 
-        # 1. Regime Detection (The "Hidden Markov" or "GMM" context)
-        # Signals that you understand market volatility clusters
+        # 1. Regime Detection
         rd = RegimeDetector()
         train_regimes = rd.fit_predict(X_train_fold)
         test_regimes = rd.predict(X_test_fold)
@@ -45,7 +43,7 @@ def walk_forward_validation(X_df, y_series, n_splits=3):
         preds = model.predict(X_te_s)
 
         # 4. Error Attribution
-        # MAE and RMSE are standard, but for Alpha, direction matters most
+        # MAE and RMSE are standard, but for alpha, direction matters most
         y_true = y_test_fold.values
         metrics.append({
             "fold": i,
@@ -55,3 +53,4 @@ def walk_forward_validation(X_df, y_series, n_splits=3):
         })
 
     return metrics
+
