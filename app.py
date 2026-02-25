@@ -135,7 +135,7 @@ try:
     fig.update_yaxes(title_text="Price (USD)", row=1, col=1)
     fig.update_yaxes(title_text="Signal (Long/Short)", showticklabels=False, row=2, col=1)
     
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width="stretch")
 
     # EQUITY CURVE
     fig_equity = go.Figure()
@@ -144,7 +144,8 @@ try:
     fig_equity.update_layout(title="Net Performance Curve (%)", 
                              xaxis_title="Simulation Time (EST)", yaxis_title="Cumulative PnL (%)",
                              template="plotly_dark", height=400)
-    st.plotly_chart(fig_equity, use_container_width=True)
+    st.plotly_chart(fig_equity, width="stretch")
 
 except Exception as e:
     st.error(f"Backtest Runtime Error: {e}")
+
