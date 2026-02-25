@@ -3,7 +3,7 @@
 ## A Stacked Deep Learning Approach
 ------------------------------------------------------------------------
 
-## 📌 Abstract
+## Abstract
 
 Financial time-series data at the intraday level (e.g., 5-minute
 intervals) is notoriously non-stationary and exhibits a remarkably low
@@ -19,7 +19,7 @@ directional forecasts under realistic execution constraints.
 
 ------------------------------------------------------------------------
 
-# 🧠 1. Machine Learning Architecture
+# 1. Machine Learning Architecture
 
 The predictive engine relies on a hierarchical stacking methodology
 (Stacked Generalization) to mitigate the variance inherent in financial
@@ -62,7 +62,7 @@ generalization error and producing the final raw alpha forecast.
 
 ------------------------------------------------------------------------
 
-# 📈 2. Financial Engineering & Signal Processing
+# 2. Financial Engineering & Signal Processing
 
 ## 2.1 Intercept Neutralization (Session-Relative Bias)
 
@@ -79,7 +79,7 @@ Otherwise → trade executed.
 
 ------------------------------------------------------------------------
 
-# ⚖️ 3. Friction-Adjusted Backtesting
+# 3. Friction-Adjusted Backtesting
 
 $Let: - S_t ∈ {-1, 0, 1} = execution signal$\
 - c = transaction cost per trade
@@ -104,7 +104,7 @@ $MDD = min_t (E_t / max\_{tau ≤ t} E_tau - 1)$
 
 ------------------------------------------------------------------------
 
-# 💻 Technical Stack
+# Tech Stack
 
 **Deep Learning** 
 - TensorFlow 2.x
@@ -125,7 +125,7 @@ $MDD = min_t (E_t / max\_{tau ≤ t} E_tau - 1)$
 
 ------------------------------------------------------------------------
 
-# 📂 Repository Structure
+# Repository Structure
 
     ├── app.py
     ├── src/
@@ -142,7 +142,7 @@ $MDD = min_t (E_t / max\_{tau ≤ t} E_tau - 1)$
 
 ------------------------------------------------------------------------
 
-# 🚀 Usage
+# Usage
 
 ``` bash
 pip install -r requirements.txt
