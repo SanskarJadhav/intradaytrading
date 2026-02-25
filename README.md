@@ -1,6 +1,4 @@
 # Intraday Alpha Forecasting and Execution Framework
-
-## A Stacked Deep Learning Approach
 ------------------------------------------------------------------------
 
 ## Abstract
