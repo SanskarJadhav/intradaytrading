@@ -11,7 +11,7 @@ from src.data import fetch_intraday_data, split_train_test
 from src.features import build_feature_matrix
 from src.models import scale_features, WINDOW_SIZE
 from src.ensemble import StackedEnsemble
-from src.regime import RegimeDetector # Ensure this import is here
+from src.regime import RegimeDetector 
 
 st.set_page_config(layout="wide", page_title="Alpha Backtester", page_icon="📈")
 st.title("📈 Intraday Alpha Backtesting Framework")
@@ -26,7 +26,7 @@ def get_session_key():
 st.sidebar.title("Developed by Sanskar Jadhav")
 ticker = st.sidebar.selectbox(
     "Equity Universe", 
-    ["BTC-USD", "AAPL", "NVDA", "TSLA", "MSFT", "AMD", "META", "GOOGL", "AMZN", "NFLX", "SPY", "QQQ"]
+    ["SPY", "QQQ", "AAPL", "NVDA", "TSLA", "MSFT", "AMD", "META", "GOOGL", "AMZN", "NFLX", "BTC-USD"]
 )
 
 st.sidebar.markdown("---")
@@ -40,13 +40,13 @@ cost_per_trade = st.sidebar.slider(
 
 intercept_neutral = st.sidebar.checkbox(
     "Intercept Neutralization", 
-    value=False, 
+    value=True, 
     help="Demeans the prediction vector to ensure signal symmetry regardless of the session-level drift."
 )
 
 min_conviction = st.sidebar.slider(
     "Signal Conviction Threshold (%)", 
-    20, 90, 30, 5,
+    20, 95, 80, 5,
     help="Filters for high-conviction alpha signals by ignoring predictions within the noise floor."
 ) / 100
 
@@ -127,7 +127,6 @@ try:
     
     sim_date = times[0].strftime('%B %d, %Y')
 
-    # UPDATED: 3 Rows to include Regime Heatmap
     fig = make_subplots(rows=3, cols=1, shared_xaxes=True, 
                         vertical_spacing=0.03, row_heights=[0.7, 0.15, 0.15])
 
@@ -149,22 +148,33 @@ try:
                          hovertemplate="<b>State:</b> %{text}<br><b>Conviction:</b> %{customdata:.1%}<extra></extra>",
                          customdata=confidence_scores), row=2, col=1)
 
-    # Regime Heatmap
-    regime_colors = ['#444444', '#3399ff', '#ffcc00'] # Neutral, Trending, Volatile
+    # --- REGIME HEATMAP ---
+    # Legend mapping for sorted IDs
+    regime_map = {0: "Quiet/Stable", 1: "Trending", 2: "Volatile/Chaos"}
+    regime_colors = ['#444444', '#3399ff', '#x1F7E8'] # Grey, Blue, Amber
+    
+    regime_names = [regime_map.get(int(r), "Unknown") for r in regimes_trimmed]
+
     fig.add_trace(go.Bar(x=times, y=[1]*len(regimes_trimmed), 
-                         marker_color=[regime_colors[int(r) % len(regime_colors)] for r in regimes_trimmed],
+                         marker_color=[regime_colors[int(r)] for r in regimes_trimmed],
                          name="Market Regime", showlegend=False,
-                         hovertemplate="<b>Regime ID:</b> %{text}<extra></extra>",
-                         text=regimes_trimmed), row=3, col=1)
+                         text=regime_names,
+                         hovertemplate="<b>Regime:</b> %{text}<extra></extra>"), row=3, col=1)
 
     fig.update_layout(title=f"Alpha Analytics: {ticker} | Simulation Date: {sim_date}", 
-                      template="plotly_dark", height=700, hovermode="x unified", margin=dict(t=50, b=50))
+                      template="plotly_dark", height=750, hovermode="x unified", margin=dict(t=50, b=50))
     
     fig.update_yaxes(title_text="Price (USD)", row=1, col=1)
     fig.update_yaxes(title_text="Signal", showticklabels=False, row=2, col=1)
     fig.update_yaxes(title_text="Regime", showticklabels=False, row=3, col=1)
     
     st.plotly_chart(fig, width="stretch")
+
+    # --- REGIME LEGEND ---
+    c1, c2, c3 = st.columns(3)
+    c1.markdown(f"⬛ **Regime 0**: {regime_map[0]}")
+    c2.markdown(f"🟦 **Regime 1**: {regime_map[1]}")
+    c3.markdown(f"🟨 **Regime 2**: {regime_map[2]}")
 
     # EQUITY CURVE
     fig_equity = go.Figure()
