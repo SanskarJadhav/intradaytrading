@@ -31,7 +31,7 @@ forecasting.
 Raw price sequences are non-stationary. To satisfy weak stationarity
 assumptions, prices are transformed into logarithmic returns:
 
-r_t = ln(P_t / P\_{t-1})
+$r_t = ln(P_t / P\_{t-1})$
 
 Features are subsequently standardized using strict temporal
 separation.\
@@ -45,7 +45,8 @@ window to prevent look-ahead bias (data leakage).
 A Multi-Layer Perceptron (MLP) designed to map complex, non-linear
 feature interactions.
 
-Regularization techniques include: - Dropout layers\
+Regularization techniques include: 
+- Dropout layers\
 - L2 (Ridge) weight regularization
 
 ### Regularized Linear Models (Scikit-Learn)
@@ -66,25 +67,25 @@ generalization error and producing the final raw alpha forecast.
 
 ## 2.1 Intercept Neutralization (Session-Relative Bias)
 
-A_t = y_hat_t - mean(y_hat)
+$A_t = y_hat_t - mean(y_hat)$
 
 This isolates idiosyncratic alpha by removing session-level drift.
 
 ## 2.2 Conviction-Weighted Thresholding
 
-Z_t = \|A_t\| / sigma_A
+$Z_t = \|A_t\| / sigma_A$
 
-If Z_t \< tau → signal suppressed (S_t = 0).\
+$If Z_t \< tau$ → signal suppressed $(S_t = 0).$\
 Otherwise → trade executed.
 
 ------------------------------------------------------------------------
 
 # ⚖️ 3. Friction-Adjusted Backtesting
 
-Let: - S_t ∈ {-1, 0, 1} = execution signal\
+$Let: - S_t ∈ {-1, 0, 1} = execution signal$\
 - c = transaction cost per trade
 
-R_net,t = (S_t \* r_actual,t) - (c \* \|S_t\|)
+$R_net,t = (S_t \* r_actual,t) - (c \* \|S_t\|)$
 
 ------------------------------------------------------------------------
 
@@ -96,27 +97,31 @@ Directional accuracy of active signals.
 
 ### Annualized Sharpe Ratio
 
-Sharpe = sqrt(252 \* 78) \* mu_net / sigma_net
+$Sharpe = sqrt(252 \* 78) \* mu_net / sigma_net$
 
 ### Maximum Drawdown (MDD)
 
-MDD = min_t (E_t / max\_{tau ≤ t} E_tau - 1)
+$MDD = min_t (E_t / max\_{tau ≤ t} E_tau - 1)$
 
 ------------------------------------------------------------------------
 
 # 💻 Technical Stack
 
-**Deep Learning** - TensorFlow 2.x\
+**Deep Learning** 
+- TensorFlow 2.x\
 - Keras
 
-**Machine Learning / Math** - Scikit-Learn\
+**Machine Learning / Math** 
+- Scikit-Learn\
 - NumPy\
 - SciPy
 
-**Data Pipeline** - Pandas\
+**Data Pipeline** 
+- Pandas\
 - yfinance
 
-**Visualization & UI** - Plotly\
+**Visualization & UI** 
+- Plotly\
 - Streamlit
 
 ------------------------------------------------------------------------
