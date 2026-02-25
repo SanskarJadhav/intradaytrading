@@ -30,8 +30,7 @@ Visualization: Plotly (Dynamic Alpha Analytics)
 
 Interface: Streamlit
 
-📂 Project Structure
-Plaintext
+## Project Structure
 ├── app/
 │   └── app.py           # Dashboard & Signal Visualization
 ├── src/
