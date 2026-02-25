@@ -35,8 +35,5 @@ class StackedEnsemble:
         
         meta_X = np.column_stack([p_xgb, p_rf, p_lstm])
         raw_preds = self.meta.predict(meta_X)
-        
-        # FIX: The Ultimate Safety Net. 
-        # Limits predictions to a MAXIMUM of a 3% price move per 5 minutes.
-        # It is now mathematically impossible to see 71k on your chart.
+
         return np.clip(raw_preds, -0.03, 0.03)
