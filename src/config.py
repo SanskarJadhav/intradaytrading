@@ -1,24 +1,19 @@
 # src/config.py
 
 INTERVAL = "5m"
-TRAIN_DAYS = 20
-WINDOW_SIZE = 10 # Increased lookback for better feature capture
+TRAIN_DAYS = 20  # Roughly one trading month
+WINDOW_SIZE = 12 # 1 hour of lookback (12 * 5m) - academically superior for intraday
 RANDOM_STATE = 42
 
-LSTM_EPOCHS = 20
-LSTM_BATCH_SIZE = 32
-
+# XGBoost: Adjusted for "Stochastic" intraday returns
 XGB_PARAMS = {
-    "n_estimators": 200,
-    "max_depth": 4,
-    "learning_rate": 0.01, # Slower learning to prevent overfitting returns
-    "subsample": 0.8,
+    "n_estimators": 150,
+    "max_depth": 3,      # Shallow trees are better for high-noise financial data
+    "learning_rate": 0.05, 
+    "subsample": 0.7,
+    "colsample_bytree": 0.7,
     "random_state": RANDOM_STATE
 }
 
-RF_PARAMS = {
-    "n_estimators": 200,
-    "max_depth": 6,
-    "random_state": RANDOM_STATE,
-    "n_jobs": -1
-}
+# Regime Detection Settings
+N_REGIMES = 3  # Bear, Bull, Sideways/Volatile
